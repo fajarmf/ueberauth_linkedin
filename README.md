@@ -1,9 +1,11 @@
-# UeberauthLinkedIn
+# Überauth LinkedIn
 
 [![Build Status][travis-img]][travis] [![Hex Version][hex-img]][hex] [![License][license-img]][license]
 
 [license-img]: http://img.shields.io/badge/license-MIT-brightgreen.svg
 [license]: http://opensource.org/licenses/MIT
+[hex-img]: https://img.shields.io/hexpm/v/ueberauth_linkedin.svg
+[hex]: https://hex.pm/packages/ueberauth_linkedin
 [travis-img]: https://travis-ci.org/fajarmf/ueberauth_linkedin.svg?branch=master
 [travis]: https://travis-ci.org/fajarmf/ueberauth_linkedin
 
