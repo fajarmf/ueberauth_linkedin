@@ -2,6 +2,8 @@
 
 [license-img]: http://img.shields.io/badge/license-MIT-brightgreen.svg
 [license]: http://opensource.org/licenses/MIT
+[travis-img]: https://travis-ci.org/fajarmf/ueberauth_linkedin.svg?branch=master
+[travis]: https://travis-ci.org/fajarmf/ueberauth_linkedin
 
 > LinkedIn OAuth2 strategy for Überauth.
 
