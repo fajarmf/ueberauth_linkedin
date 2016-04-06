@@ -19,7 +19,7 @@
 
     ```elixir
     def deps do
-      [{:ueberauth_linkedin, "~> 0.0.1"}]
+      [{:ueberauth_linkedin, "~> 0.1"}]
     end
     ```
 
