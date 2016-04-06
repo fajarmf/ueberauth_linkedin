@@ -22,10 +22,11 @@ defmodule Ueberauth.Strategy.LinkedIn.OAuth do
 
   This will be setup automatically for you in `Ueberauth.Strategy.LinkedIn`.
 
-  These options are only useful for usage outside the normal callback phase of Ueberauth.
+  These options are only useful for usage outside the normal callback phase of
+  Ueberauth.
   """
   def client(opts \\ []) do
-    config = Application.get_env(:ueberauth, Ueberauth.Strategy.LinkedIn.OAuth) || []
+    config = Application.get_env(:ueberauth, Ueberauth.Strategy.LinkedIn.OAuth)
 
     opts =
       @defaults
@@ -36,7 +37,8 @@ defmodule Ueberauth.Strategy.LinkedIn.OAuth do
   end
 
   @doc """
-  Provides the authorize url for the request phase of Ueberauth. No need to call this usually.
+  Provides the authorize url for the request phase of Ueberauth.
+  No need to call this usually.
   """
   def authorize_url!(params \\ [], opts \\ []) do
     opts

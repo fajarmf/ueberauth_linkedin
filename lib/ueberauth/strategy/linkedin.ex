@@ -3,7 +3,9 @@ defmodule Ueberauth.Strategy.LinkedIn do
   LinkedIn Strategy for Überauth.
   """
 
-  use Ueberauth.Strategy, uid_field: :id, default_scope: "r_basicprofile r_emailaddress"
+  use Ueberauth.Strategy,
+    uid_field: :id,
+    default_scope: "r_basicprofile r_emailaddress"
 
   alias Ueberauth.Auth.Info
   alias Ueberauth.Auth.Credentials
@@ -15,7 +17,9 @@ defmodule Ueberauth.Strategy.LinkedIn do
   def handle_request!(conn) do
     scopes = conn.params["scope"] || option(conn, :default_scope)
     opts = [ scope: scopes ]
-    if conn.params["state"], do: opts = Keyword.put(opts, :state, conn.params["state"])
+    if conn.params["state"] do
+      opts = Keyword.put(opts, :state, conn.params["state"])
+    end
     opts = Keyword.put(opts, :redirect_uri, callback_url(conn))
 
     redirect!(conn, Ueberauth.Strategy.LinkedIn.OAuth.authorize_url!(opts))
@@ -29,7 +33,9 @@ defmodule Ueberauth.Strategy.LinkedIn do
     token = Ueberauth.Strategy.LinkedIn.OAuth.get_token!([code: code], opts)
 
     if token.access_token == nil do
-      set_errors!(conn, [error(token.other_params["error"], token.other_params["error_description"])])
+      token_error = token.other_params["error"]
+      token_error_description = token.other_params["error_description"]
+      set_errors!(conn, [error(token_error, token_error_description)])
     else
       fetch_user(conn, token)
     end
@@ -74,7 +80,7 @@ defmodule Ueberauth.Strategy.LinkedIn do
   end
 
   @doc """
-  Fetches the fields to populate the info section of the `Ueberauth.Auth` struct.
+  Fetches the fields to populate the info section of `Ueberauth.Auth` struct.
   """
   def info(conn) do
     user = conn.private.linkedin_user
@@ -88,7 +94,8 @@ defmodule Ueberauth.Strategy.LinkedIn do
   end
 
   @doc """
-  Stores the raw information (including the token) obtained from the linkedin callback.
+  Stores the raw information (including the token) obtained from
+  the linkedin callback.
   """
   def extra(conn) do
     %Extra{
@@ -101,7 +108,9 @@ defmodule Ueberauth.Strategy.LinkedIn do
 
   defp skip_url_encode_option, do: [hackney: [path_encode_fun: fn(a) -> a end]]
 
-  defp user_query, do: "/v1/people/~:(id,picture-url,email-address,firstName,lastName)?format=json"
+  defp user_query do
+    "/v1/people/~:(id,picture-url,email-address,firstName,lastName)?format=json"
+  end
 
   defp fetch_user(conn, token) do
     conn = put_private(conn, :linkedin_token, token)
@@ -110,8 +119,9 @@ defmodule Ueberauth.Strategy.LinkedIn do
     case resp do
       { :ok, %OAuth2.Response{status_code: 401, body: _body}} ->
         set_errors!(conn, [error("token", "unauthorized")])
-      { :ok, %OAuth2.Response{status_code: status_code, body: user} } when status_code in 200..399 ->
-        put_private(conn, :linkedin_user, user)
+      { :ok, %OAuth2.Response{status_code: status_code, body: user} }
+        when status_code in 200..399 ->
+          put_private(conn, :linkedin_user, user)
       { :error, %OAuth2.Error{reason: reason} } ->
         set_errors!(conn, [error("OAuth2", reason)])
     end
