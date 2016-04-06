@@ -1,5 +1,7 @@
 # UeberauthLinkedIn
 
+[![Build Status][travis-img]][travis] [![Hex Version][hex-img]][hex] [![License][license-img]][license]
+
 [license-img]: http://img.shields.io/badge/license-MIT-brightgreen.svg
 [license]: http://opensource.org/licenses/MIT
 [travis-img]: https://travis-ci.org/fajarmf/ueberauth_linkedin.svg?branch=master
