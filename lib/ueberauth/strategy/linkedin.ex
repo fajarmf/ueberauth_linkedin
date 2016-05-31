@@ -30,7 +30,8 @@ defmodule Ueberauth.Strategy.LinkedIn do
   @doc """
   Handles the callback from LinkedIn.
   """
-  def handle_callback!(%Plug.Conn{ params: %{ "code" => code, "state" => state } } = conn) do
+  def handle_callback!(%Plug.Conn{params: %{"code" => code,
+                                            "state" => state}} = conn) do
     opts = [redirect_uri: callback_url(conn)]
     token = Ueberauth.Strategy.LinkedIn.OAuth.get_token!([code: code], opts)
 
