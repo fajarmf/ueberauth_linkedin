@@ -17,7 +17,7 @@ defmodule Ueberauth.Strategy.LinkedIn do
   def handle_request!(conn) do
     scopes = conn.params["scope"] || option(conn, :default_scope)
     state =
-      conn.params["state"] || :crypto.strong_rand_bytes(16) |> Base.encode64
+      conn.params["state"] || Base.encode64(:crypto.strong_rand_bytes(16))
 
     opts = [scope: scopes,
             state: state,
