@@ -16,14 +16,15 @@ defmodule Ueberauth.Strategy.LinkedIn do
   """
   def handle_request!(conn) do
     scopes = conn.params["scope"] || option(conn, :default_scope)
-    opts = [ scope: scopes ]
-    if conn.params["state"] do
-      opts = Keyword.put(opts, :state, conn.params["state"])
-      pid = spawn fn -> csrf_protection(conn.params["state"]) end
-      Process.register(pid, :state_holder)
-    end
-    opts = Keyword.put(opts, :redirect_uri, callback_url(conn))
+    state =
+      conn.params["state"] || :crypto.strong_rand_bytes(16) |> Base.encode64
 
+    opts = [scope: scopes,
+            state: state,
+            redirect_uri: callback_url(conn)]
+
+    pid = spawn fn -> csrf_protection(state) end
+    Process.register(pid, :state_holder)
     redirect!(conn, Ueberauth.Strategy.LinkedIn.OAuth.authorize_url!(opts))
   end
 
