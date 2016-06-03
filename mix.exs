@@ -5,7 +5,7 @@ defmodule UeberauthLinkedin.Mixfile do
 
   def project do
     [app: :ueberauth_linkedin,
-     version: "0.1.0",
+     version: "0.2.0",
      name: "Ueberauth LinkedIn Strategy",
      elixir: "~> 1.2",
      package: package,
