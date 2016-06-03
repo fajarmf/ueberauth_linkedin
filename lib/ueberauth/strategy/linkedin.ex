@@ -16,28 +16,37 @@ defmodule Ueberauth.Strategy.LinkedIn do
   """
   def handle_request!(conn) do
     scopes = conn.params["scope"] || option(conn, :default_scope)
-    opts = [ scope: scopes ]
-    if conn.params["state"] do
-      opts = Keyword.put(opts, :state, conn.params["state"])
-    end
-    opts = Keyword.put(opts, :redirect_uri, callback_url(conn))
+    state =
+      conn.params["state"] || Base.encode64(:crypto.strong_rand_bytes(16))
 
+    opts = [scope: scopes,
+            state: state,
+            redirect_uri: callback_url(conn)]
+
+    pid = spawn fn -> csrf_protection(state) end
+    Process.register(pid, :state_holder)
     redirect!(conn, Ueberauth.Strategy.LinkedIn.OAuth.authorize_url!(opts))
   end
 
   @doc """
   Handles the callback from LinkedIn.
   """
-  def handle_callback!(%Plug.Conn{ params: %{ "code" => code } } = conn) do
+  def handle_callback!(%Plug.Conn{params: %{"code" => code,
+                                            "state" => state}} = conn) do
     opts = [redirect_uri: callback_url(conn)]
     token = Ueberauth.Strategy.LinkedIn.OAuth.get_token!([code: code], opts)
+
+    send :state_holder, {self, state}
 
     if token.access_token == nil do
       token_error = token.other_params["error"]
       token_error_description = token.other_params["error_description"]
       set_errors!(conn, [error(token_error, token_error_description)])
     else
-      fetch_user(conn, token)
+      receive do
+        {:ok, _state} -> fetch_user(conn, token)
+        {:error, reason} -> set_errors!(conn, [error("csrf", reason)])
+      end
     end
   end
 
@@ -129,5 +138,12 @@ defmodule Ueberauth.Strategy.LinkedIn do
 
   defp option(conn, key) do
     Dict.get(options(conn), key, Dict.get(default_options, key))
+  end
+
+  defp csrf_protection(initial_state) do
+    receive do
+      {sender, ^initial_state} -> send sender, {:ok, initial_state}
+      {sender, _} -> send sender, {:error, "CSRF token mismatch"}
+    end
   end
 end
