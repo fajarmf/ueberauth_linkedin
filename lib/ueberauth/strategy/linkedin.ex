@@ -23,8 +23,6 @@ defmodule Ueberauth.Strategy.LinkedIn do
             state: state,
             redirect_uri: callback_url(conn)]
 
-    pid = spawn fn -> csrf_protection(state) end
-    Process.register(pid, :state_holder)
     redirect!(conn, Ueberauth.Strategy.LinkedIn.OAuth.authorize_url!(opts))
   end
 
