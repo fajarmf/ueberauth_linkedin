@@ -137,11 +137,4 @@ defmodule Ueberauth.Strategy.LinkedIn do
   defp option(conn, key) do
     Dict.get(options(conn), key, Dict.get(default_options, key))
   end
-
-  defp csrf_protection(initial_state) do
-    receive do
-      {sender, ^initial_state} -> send sender, {:ok, initial_state}
-      {sender, _} -> send sender, {:error, "CSRF token mismatch"}
-    end
-  end
 end
