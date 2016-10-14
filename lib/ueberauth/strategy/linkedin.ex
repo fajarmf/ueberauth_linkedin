@@ -11,6 +11,8 @@ defmodule Ueberauth.Strategy.LinkedIn do
   alias Ueberauth.Auth.Credentials
   alias Ueberauth.Auth.Extra
 
+  @state_cookie_name "ueberauth_linkedin_state"
+
   @doc """
   Handles initial request for LinkedIn authentication.
   """
@@ -23,9 +25,9 @@ defmodule Ueberauth.Strategy.LinkedIn do
             state: state,
             redirect_uri: callback_url(conn)]
 
-    pid = spawn fn -> csrf_protection(state) end
-    Process.register(pid, :state_holder)
-    redirect!(conn, Ueberauth.Strategy.LinkedIn.OAuth.authorize_url!(opts))
+    conn
+    |> put_resp_cookie(@state_cookie_name, state)
+    |> redirect!(Ueberauth.Strategy.LinkedIn.OAuth.authorize_url!(opts))
   end
 
   @doc """
@@ -36,23 +38,30 @@ defmodule Ueberauth.Strategy.LinkedIn do
     opts = [redirect_uri: callback_url(conn)]
     token = Ueberauth.Strategy.LinkedIn.OAuth.get_token!([code: code], opts)
 
-    send :state_holder, {self, state}
-
     if token.access_token == nil do
       token_error = token.other_params["error"]
       token_error_description = token.other_params["error_description"]
-      set_errors!(conn, [error(token_error, token_error_description)])
+      conn
+      |> delete_resp_cookie(@state_cookie_name)
+      |> set_errors!([error(token_error, token_error_description)])
     else
-      receive do
-        {:ok, _state} -> fetch_user(conn, token)
-        {:error, reason} -> set_errors!(conn, [error("csrf", reason)])
+      if conn.cookies[@state_cookie_name] == state do
+        conn
+        |> delete_resp_cookie(@state_cookie_name)
+        |> fetch_user(token)
+      else
+        conn
+        |> delete_resp_cookie(@state_cookie_name)
+        |> set_errors!([error("csrf", "CSRF token mismatch")])
       end
     end
   end
 
   @doc false
   def handle_callback!(conn) do
-    set_errors!(conn, [error("missing_code", "No code received")])
+    conn
+    |> delete_resp_cookie(@state_cookie_name)
+    |> set_errors!([error("missing_code", "No code received")])
   end
 
   @doc false
@@ -138,12 +147,5 @@ defmodule Ueberauth.Strategy.LinkedIn do
 
   defp option(conn, key) do
     Dict.get(options(conn), key, Dict.get(default_options, key))
-  end
-
-  defp csrf_protection(initial_state) do
-    receive do
-      {sender, ^initial_state} -> send sender, {:ok, initial_state}
-      {sender, _} -> send sender, {:error, "CSRF token mismatch"}
-    end
   end
 end
