@@ -24,6 +24,8 @@ defmodule Ueberauth.Strategy.LinkedIn do
             redirect_uri: callback_url(conn)]
 
     pid = spawn fn -> csrf_protection(state) end
+    IO.puts "alive? linkedin pid: #{inspect pid} #{Process.alive?(pid)}"
+    IO.puts "where is state_holder --#{inspect Process.whereis(:state_holder)}--"
     Process.register(pid, :state_holder)
     redirect!(conn, Ueberauth.Strategy.LinkedIn.OAuth.authorize_url!(opts))
   end
