@@ -39,7 +39,7 @@ defmodule UeberauthLinkedin.Mixfile do
 
   defp deps do
     [{:ueberauth, "~> 0.2"},
-     {:oauth2, git: "https://github.com/fajarmf/oauth2"},
+     {:oauth2, "~> 0.8"},
      {:earmark, "~> 0.1", only: :dev},
      {:ex_doc, "~> 0.11", only: :dev},
      {:dogma, "~> 0.1", only: [:dev, :test]}]
