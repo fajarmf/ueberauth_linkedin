@@ -1,5 +1,6 @@
 # v 0.3.0
 * Change to cookies to fix issue stale process
+* use latest oauth version
 
 # v 0.2.0
 * Add csrf protection
