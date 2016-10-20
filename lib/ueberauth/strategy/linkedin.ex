@@ -36,7 +36,7 @@ defmodule Ueberauth.Strategy.LinkedIn do
   def handle_callback!(%Plug.Conn{params: %{"code" => code,
                                             "state" => state}} = conn) do
     opts = [redirect_uri: callback_url(conn)]
-    token = Ueberauth.Strategy.LinkedIn.OAuth.get_token!([code: code], opts)
+    %OAuth2.Client{token: token} = Ueberauth.Strategy.LinkedIn.OAuth.get_token!([code: code], opts)
 
     if token.access_token == nil do
       token_error = token.other_params["error"]
@@ -124,7 +124,7 @@ defmodule Ueberauth.Strategy.LinkedIn do
     }
   end
 
-  defp skip_url_encode_option, do: [hackney: [path_encode_fun: fn(a) -> a end]]
+  defp skip_url_encode_option, do: [path_encode_fun: fn(a) -> a end]
 
   defp user_query do
     "/v1/people/~:(id,picture-url,email-address,firstName,lastName)?format=json"
@@ -132,7 +132,9 @@ defmodule Ueberauth.Strategy.LinkedIn do
 
   defp fetch_user(conn, token) do
     conn = put_private(conn, :linkedin_token, token)
-    resp = OAuth2.AccessToken.get(token, user_query, [], skip_url_encode_option)
+    resp = Ueberauth.Strategy.LinkedIn.OAuth.get(token, user_query, [], skip_url_encode_option)
+
+IO.puts("linkedin fetch_user, resp = #{inspect resp}")
 
     case resp do
       { :ok, %OAuth2.Response{status_code: 401, body: _body}} ->

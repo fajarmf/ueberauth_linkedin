@@ -53,6 +53,11 @@ defmodule Ueberauth.Strategy.LinkedIn.OAuth do
     |> OAuth2.Client.get_token!(params)
   end
 
+  def get(token, url, headers \\ [], opts \\ []) do
+    client([token: token])
+    |> OAuth2.Client.get(url, headers, opts)
+  end
+
   # Strategy Callbacks
 
   def authorize_url(client, params) do
@@ -61,6 +66,7 @@ defmodule Ueberauth.Strategy.LinkedIn.OAuth do
 
   def get_token(client, params, headers) do
     client
+    |> put_param("client_secret", client.client_secret)
     |> put_header("Accept", "application/json")
     |> OAuth2.Strategy.AuthCode.get_token(params, headers)
   end

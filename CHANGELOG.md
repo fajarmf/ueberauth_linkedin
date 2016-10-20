@@ -1,4 +1,7 @@
-# v 0.3.0
+# v 0.3.2
+* Fix issues related to OAuth2 flow
+
+# v 0.3.1
 * Change to cookies to fix issue stale process
 * use latest oauth version
 
