@@ -35,6 +35,8 @@ defmodule Ueberauth.Strategy.LinkedIn do
   """
   def handle_callback!(%Plug.Conn{params: %{"code" => code,
                                             "state" => state}} = conn) do
+    conn = conn |> fetch_cookies
+
     opts = [redirect_uri: callback_url(conn)]
     %OAuth2.Client{token: token} = Ueberauth.Strategy.LinkedIn.OAuth.get_token!([code: code], opts)
 
