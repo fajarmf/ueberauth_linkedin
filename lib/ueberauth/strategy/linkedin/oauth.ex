@@ -4,10 +4,11 @@ defmodule Ueberauth.Strategy.LinkedIn.OAuth do
 
   Add `client_id` and `client_secret` to your configuration:
 
-  config :ueberauth, Ueberauth.Strategy.LinkedIn.OAuth,
-    client_id: System.get_env("LINKEDIN_CLIENT_ID"),
-    client_secret: System.get_env("LINKEDIN_CLIENT_SECRET")
+      config :ueberauth, Ueberauth.Strategy.LinkedIn.OAuth,
+        client_id: System.get_env("LINKEDIN_CLIENT_ID"),
+        client_secret: System.get_env("LINKEDIN_CLIENT_SECRET")
   """
+
   use OAuth2.Strategy
 
   @defaults [
@@ -37,13 +38,12 @@ defmodule Ueberauth.Strategy.LinkedIn.OAuth do
   end
 
   @doc """
-  Provides the authorize url for the request phase of Ueberauth.
-  No need to call this usually.
+  Provides the authorize url for the request phase of Ueberauth. No need to call
+  this usually.
   """
   def authorize_url!(params \\ [], opts \\ []) do
     opts
     |> client
-    # |> put_param(:state, "idos")
     |> OAuth2.Client.authorize_url!(params)
   end
 
@@ -54,7 +54,8 @@ defmodule Ueberauth.Strategy.LinkedIn.OAuth do
   end
 
   def get(token, url, headers \\ [], opts \\ []) do
-    client([token: token])
+    [token: token]
+    |> client
     |> OAuth2.Client.get(url, headers, opts)
   end
 

@@ -15,7 +15,7 @@
 
 1. Setup your application at [LinkedIn Developers](https://developer.linkedin.com/).
 
-1. Add `:ueberauth_linkedin` to your list of dependencies in `mix.exs`:
+2. Add `:ueberauth_linkedin` to your list of dependencies in `mix.exs`:
 
     ```elixir
     def deps do
@@ -23,7 +23,7 @@
     end
     ```
 
-1. Add the strategy to your applications:
+3. Add the strategy to your applications:
 
     ```elixir
     def application do
@@ -31,7 +31,7 @@
     end
     ```
 
-1. Add LinkedIn to your Überauth configuration:
+4. Add LinkedIn to your Überauth configuration:
 
     ```elixir
     config :ueberauth, Ueberauth,
@@ -40,7 +40,7 @@
       ]
     ```
 
-1.  Update your provider configuration:
+5.  Update your provider configuration:
 
     ```elixir
     config :ueberauth, Ueberauth.Strategy.LinkedIn.OAuth,
@@ -48,7 +48,7 @@
       client_secret: System.get_env("LINKEDIN_CLIENT_SECRET")
     ```
 
-1.  Include the Überauth plug in your controller:
+6.  Include the Überauth plug in your controller:
 
     ```elixir
     defmodule MyApp.AuthController do
@@ -58,7 +58,7 @@
     end
     ```
 
-1.  Create the request and callback routes if you haven't already:
+7.  Create the request and callback routes if you haven't already:
 
     ```elixir
     scope "/auth", MyApp do
@@ -69,7 +69,7 @@
     end
     ```
 
-1. You controller needs to implement callbacks to deal with `Ueberauth.Auth` and `Ueberauth.Failure` responses.
+8. You controller needs to implement callbacks to deal with `Ueberauth.Auth` and `Ueberauth.Failure` responses.
 
 For an example implementation see the [Überauth Example](https://github.com/ueberauth/ueberauth_example) application.
 
@@ -95,4 +95,3 @@ config :ueberauth, Ueberauth,
 ## License
 
 Please see [LICENSE](https://github.com/fajarmf/ueberauth_linkedin/blob/master/LICENSE) for licensing details.
-
