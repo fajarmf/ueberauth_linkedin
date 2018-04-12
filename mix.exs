@@ -4,18 +4,20 @@ defmodule UeberauthLinkedin.Mixfile do
   @url "https://github.com/fajarmf/ueberauth_linkedin"
 
   def project do
-    [app: :ueberauth_linkedin,
-     version: "0.3.2",
-     name: "Ueberauth LinkedIn Strategy",
-     elixir: "~> 1.2",
-     package: package,
-     source_url: @url,
-     homepage_url: @url,
-     description: description,
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps,
-     docs: docs]
+    [
+      app: :ueberauth_linkedin,
+      version: "0.3.2",
+      name: "Ueberauth LinkedIn Strategy",
+      elixir: "~> 1.2",
+      package: package(),
+      source_url: @url,
+      homepage_url: @url,
+      description: "An Ueberauth strategy for LinkedIn authentication.",
+      build_embedded: Mix.env == :prod,
+      start_permanent: Mix.env == :prod,
+      deps: deps(),
+      docs: [extras: ["README.md"], main: "readme"]
+    ]
   end
 
   # Configuration for the OTP application
@@ -25,30 +27,22 @@ defmodule UeberauthLinkedin.Mixfile do
     [applications: [:logger, :oauth2, :ueberauth]]
   end
 
-  defp docs do
-    [extras: docs_extras, main: "readme"]
-  end
-
-  defp docs_extras do
-    ["README.md"]
-  end
-
-  defp description do
-    "An Ueberauth strategy for LinkedIn authentication"
-  end
-
   defp deps do
-    [{:ueberauth, "~> 0.3"},
-     {:oauth2, "~> 0.8"},
-     {:earmark, "~> 0.1", only: :dev},
-     {:ex_doc, "~> 0.11", only: :dev},
-     {:dogma, "~> 0.1", only: [:dev, :test]}]
+    [
+      {:ueberauth, "~> 0.5"},
+      {:oauth2, "~> 0.8"},
+      {:earmark, "~> 0.1", only: :dev},
+      {:ex_doc, "~> 0.11", only: :dev},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
+    ]
   end
 
   defp package do
-    [files: ["lib", "mix.exs", "README.md", "LICENSE"],
+    [
+      files: ["lib", "mix.exs", "README.md", "LICENSE"],
       maintainers: ["Fajar Firdaus"],
       licenses: ["MIT"],
-      links: %{"Github": @url}]
+      links: %{"Github": @url}
+    ]
   end
 end
