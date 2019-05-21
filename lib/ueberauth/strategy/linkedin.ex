@@ -17,33 +17,37 @@ defmodule Ueberauth.Strategy.LinkedIn do
   Handles initial request for LinkedIn authentication.
   """
   def handle_request!(conn) do
-    scopes = conn.params["scope"] || option(conn, :default_scope)
-    state =
-      conn.params["state"] || Base.encode64(:crypto.strong_rand_bytes(16))
-
-    opts = [scope: scopes,
-            state: state,
-            redirect_uri: callback_url(conn)]
+    state = conn.params["state"] || Base.encode64(:crypto.strong_rand_bytes(16))
 
     conn
     |> put_resp_cookie(@state_cookie_name, state)
-    |> redirect!(Ueberauth.Strategy.LinkedIn.OAuth.authorize_url!(opts))
+    |> redirect!(
+      Ueberauth.Strategy.LinkedIn.OAuth.authorize_url!(
+        scope: conn.params["scope"] || option(conn, :default_scope),
+        state: state,
+        redirect_uri: callback_url(conn)
+      )
+    )
   end
 
   @doc """
   Handles the callback from LinkedIn.
   """
-  def handle_callback!(%Plug.Conn{params: %{"code" => code,
-                                            "state" => state}} = conn) do
+  def handle_callback!(%Plug.Conn{params: %{"code" => code, "state" => state}} = conn) do
     opts = [redirect_uri: callback_url(conn)]
-    %OAuth2.Client{token: token} = Ueberauth.Strategy.LinkedIn.OAuth.get_token!([code: code], opts)
+
+    %OAuth2.Client{token: token} =
+      Ueberauth.Strategy.LinkedIn.OAuth.get_token!([code: code], opts)
 
     if token.access_token == nil do
-      token_error = token.other_params["error"]
-      token_error_description = token.other_params["error_description"]
       conn
       |> delete_resp_cookie(@state_cookie_name)
-      |> set_errors!([error(token_error, token_error_description)])
+      |> set_errors!([
+        error(
+          token.other_params["error"],
+          token.other_params["error_description"]
+        )
+      ])
     else
       if conn.cookies[@state_cookie_name] == state do
         conn
@@ -58,18 +62,18 @@ defmodule Ueberauth.Strategy.LinkedIn do
   end
 
   @doc false
-  def handle_callback!(conn) do
-    conn
-    |> delete_resp_cookie(@state_cookie_name)
-    |> set_errors!([error("missing_code", "No code received")])
-  end
+  def handle_callback!(conn),
+    do:
+      conn
+      |> delete_resp_cookie(@state_cookie_name)
+      |> set_errors!([error("missing_code", "No code received")])
 
   @doc false
-  def handle_cleanup!(conn) do
-    conn
-    |> put_private(:linkedin_user, nil)
-    |> put_private(:linkedin_token, nil)
-  end
+  def handle_cleanup!(conn),
+    do:
+      conn
+      |> put_private(:linkedin_user, nil)
+      |> put_private(:linkedin_token, nil)
 
   @doc """
   Fetches the uid field from the response.
@@ -115,39 +119,35 @@ defmodule Ueberauth.Strategy.LinkedIn do
   Stores the raw information (including the token) obtained from
   the linkedin callback.
   """
-  def extra(conn) do
-    %Extra{
+  def extra(conn),
+    do: %Extra{
       raw_info: %{
         token: conn.private.linkedin_token,
         user: conn.private.linkedin_user
       }
     }
-  end
 
-  defp skip_url_encode_option, do: [path_encode_fun: fn(a) -> a end]
-
-  defp user_query do
-    "/v2/people/~:(id,picture-url,email-address,firstName,lastName)?format=json"
-  end
+  defp skip_url_encode_option, do: [path_encode_fun: fn a -> a end]
 
   defp fetch_user(conn, token) do
     conn = put_private(conn, :linkedin_token, token)
-    resp = Ueberauth.Strategy.LinkedIn.OAuth.get(token, user_query, [], skip_url_encode_option)
 
-IO.puts("linkedin fetch_user, resp = #{inspect resp}")
-
-    case resp do
-      { :ok, %OAuth2.Response{status_code: 401, body: _body}} ->
+    token
+    |> Ueberauth.Strategy.LinkedIn.OAuth.get("/v2/me", [], skip_url_encode_option())
+    |> case do
+      {:ok, %OAuth2.Response{status_code: 401, body: _body}} ->
         set_errors!(conn, [error("token", "unauthorized")])
-      { :ok, %OAuth2.Response{status_code: status_code, body: user} }
-        when status_code in 200..399 ->
-          put_private(conn, :linkedin_user, user)
-      { :error, %OAuth2.Error{reason: reason} } ->
+
+      {:ok, %OAuth2.Response{status_code: status_code, body: user}}
+      when status_code in 200..399 ->
+        put_private(conn, :linkedin_user, user)
+
+      {:error, %OAuth2.Error{reason: reason}} ->
         set_errors!(conn, [error("OAuth2", reason)])
     end
   end
 
   defp option(conn, key) do
-    Dict.get(options(conn), key, Dict.get(default_options, key))
+    Dict.get(options(conn), key, Dict.get(default_options(), key))
   end
 end
