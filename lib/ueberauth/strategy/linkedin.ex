@@ -5,7 +5,7 @@ defmodule Ueberauth.Strategy.LinkedIn do
 
   use Ueberauth.Strategy,
     uid_field: :id,
-    default_scope: "r_basicprofile r_emailaddress"
+    default_scope: ["r_liteprofile r_emailaddress w_member_social"]
 
   alias Ueberauth.Auth.Info
   alias Ueberauth.Auth.Credentials
@@ -17,13 +17,13 @@ defmodule Ueberauth.Strategy.LinkedIn do
   Handles initial request for LinkedIn authentication.
   """
   def handle_request!(conn) do
-    scopes = conn.params["scope"] || option(conn, :default_scope)
-    state =
-      conn.params["state"] || Base.encode64(:crypto.strong_rand_bytes(16))
+    scopes_opts = option(conn, :default_scope) |> Enum.join(" ")
+    scopes = conn.params["scope"] || scopes_opts
+    state = conn.params["state"] || Base.encode64(:crypto.strong_rand_bytes(16))
 
-    opts = [scope: scopes,
-            state: state,
-            redirect_uri: callback_url(conn)]
+    opts = [ scope: scopes,
+             state: state,
+             redirect_uri: callback_url(conn) ]
 
     conn
     |> put_resp_cookie(@state_cookie_name, state)
@@ -37,7 +37,7 @@ defmodule Ueberauth.Strategy.LinkedIn do
                                             "state" => state}} = conn) do
     opts = [redirect_uri: callback_url(conn)]
     %OAuth2.Client{token: token} = Ueberauth.Strategy.LinkedIn.OAuth.get_token!([code: code], opts)
-
+    
     if token.access_token == nil do
       token_error = token.other_params["error"]
       token_error_description = token.other_params["error_description"]
@@ -46,6 +46,7 @@ defmodule Ueberauth.Strategy.LinkedIn do
       |> set_errors!([error(token_error, token_error_description)])
     else
       if conn.cookies[@state_cookie_name] == state do
+
         conn
         |> delete_resp_cookie(@state_cookie_name)
         |> fetch_user(token)
@@ -127,15 +128,19 @@ defmodule Ueberauth.Strategy.LinkedIn do
   defp skip_url_encode_option, do: [path_encode_fun: fn(a) -> a end]
 
   defp user_query do
-    "/v1/people/~:(id,picture-url,email-address,firstName,lastName)?format=json"
+    "/v2/me"
   end
 
   defp fetch_user(conn, token) do
+    
+    %{ query_params: %{ "code" => code,
+			"state" => state
+		      }
+    } = conn
+    
     conn = put_private(conn, :linkedin_token, token)
     resp = Ueberauth.Strategy.LinkedIn.OAuth.get(token, user_query, [], skip_url_encode_option)
-
-IO.puts("linkedin fetch_user, resp = #{inspect resp}")
-
+    
     case resp do
       { :ok, %OAuth2.Response{status_code: 401, body: _body}} ->
         set_errors!(conn, [error("token", "unauthorized")])

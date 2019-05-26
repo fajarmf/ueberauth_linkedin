@@ -13,9 +13,9 @@ defmodule Ueberauth.Strategy.LinkedIn.OAuth do
   @defaults [
      strategy: __MODULE__,
      site: "https://api.linkedin.com",
-     authorize_url: "https://www.linkedin.com/uas/oauth2/authorization",
-     token_url: "https://www.linkedin.com/uas/oauth2/accessToken"
-   ]
+     authorize_url: "https://www.linkedin.com/oauth/v2/authorization",
+     token_url: "https://www.linkedin.com/oauth/v2/accessToken",
+  ]
 
   @doc """
   Construct a client for requests to LinkedIn.
@@ -26,13 +26,11 @@ defmodule Ueberauth.Strategy.LinkedIn.OAuth do
   Ueberauth.
   """
   def client(opts \\ []) do
-    config = Application.get_env(:ueberauth, Ueberauth.Strategy.LinkedIn.OAuth)
-
+    config = Application.get_env(:ueberauth, Ueberauth.Strategy.LinkedIn.OAuth, [])
     opts =
       @defaults
       |> Keyword.merge(config)
       |> Keyword.merge(opts)
-
     OAuth2.Client.new(opts)
   end
 
@@ -41,15 +39,17 @@ defmodule Ueberauth.Strategy.LinkedIn.OAuth do
   No need to call this usually.
   """
   def authorize_url!(params \\ [], opts \\ []) do
-    opts
+    scopes = params |> Keyword.get(:scope, "")
+    scope_url = "&" <> "scope=" <> URI.encode(scopes)
+    ret = opts
     |> client
-    # |> put_param(:state, "idos")
-    |> OAuth2.Client.authorize_url!(params)
+    |> OAuth2.Client.authorize_url!(params |> Keyword.delete(:scope))
+    ret <> scope_url
   end
 
   def get_token!(params \\ [], opts \\ []) do
     opts
-    |> client
+    |> client 
     |> OAuth2.Client.get_token!(params)
   end
 
