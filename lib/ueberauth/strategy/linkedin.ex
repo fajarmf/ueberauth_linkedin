@@ -5,7 +5,7 @@ defmodule Ueberauth.Strategy.LinkedIn do
 
   use Ueberauth.Strategy,
     uid_field: :id,
-    default_scope: "r_basicprofile r_emailaddress"
+    default_scope: "r_liteprofile r_emailaddress"
 
   alias Ueberauth.Auth.Info
   alias Ueberauth.Auth.Credentials
@@ -104,10 +104,9 @@ defmodule Ueberauth.Strategy.LinkedIn do
     user = conn.private.linkedin_user
 
     %Info{
-      email: user["emailAddress"],
-      first_name: user["firstName"],
-      image: user["pictureUrl"],
-      last_name: user["lastName"]
+      first_name: user["localizedFirstName"],
+      image: info_image(user),
+      last_name: user["localizedLastName"]
     }
   end
 
@@ -127,14 +126,12 @@ defmodule Ueberauth.Strategy.LinkedIn do
   defp skip_url_encode_option, do: [path_encode_fun: fn(a) -> a end]
 
   defp user_query do
-    "/v1/people/~:(id,picture-url,email-address,firstName,lastName)?format=json"
+    "https://api.linkedin.com/v2/me?projection=(id,localizedFirstName,localizedLastName,profilePicture(displayImage~:playableStreams))"
   end
 
   defp fetch_user(conn, token) do
     conn = put_private(conn, :linkedin_token, token)
-    resp = Ueberauth.Strategy.LinkedIn.OAuth.get(token, user_query, [], skip_url_encode_option)
-
-IO.puts("linkedin fetch_user, resp = #{inspect resp}")
+    resp = Ueberauth.Strategy.LinkedIn.OAuth.get(token, user_query(), [], skip_url_encode_option())
 
     case resp do
       { :ok, %OAuth2.Response{status_code: 401, body: _body}} ->
@@ -147,7 +144,15 @@ IO.puts("linkedin fetch_user, resp = #{inspect resp}")
     end
   end
 
+  defp info_image(user) do
+    user["profilePicture"]["displayImage~"]["elements"]
+    |> List.last()
+    |> Map.get("identifiers")
+    |> List.last()
+    |> Map.get("identifier")
+  end
+
   defp option(conn, key) do
-    Dict.get(options(conn), key, Dict.get(default_options, key))
+    Keyword.get(options(conn), key, Keyword.get(default_options(), key))
   end
 end
