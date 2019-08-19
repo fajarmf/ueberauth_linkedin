@@ -161,11 +161,12 @@ defmodule Ueberauth.Strategy.LinkedIn do
   end
 
   defp info_image(user) do
-    user["profilePicture"]["displayImage~"]["elements"]
+    user
+    |> get_in(["profilePicture", "displayImage~", "elements"])
     |> List.last()
-    |> Map.get("identifiers")
+    |> get_in(["identifiers"])
     |> List.last()
-    |> Map.get("identifier")
+    |> get_in(["identifier"])
   end
 
   defp email_from_primary_contact(primary_contact) do
@@ -174,10 +175,7 @@ defmodule Ueberauth.Strategy.LinkedIn do
                       element["primary"] == true && element["type"] == "EMAIL"
                     end)
 
-    case email_element do
-      nil -> nil
-      element -> element["handle~"]["emailAddress"]
-    end
+    if email = email_element["handle~"]["emailAddress"], do: email, else: nil
   end
 
   defp option(conn, key) do
