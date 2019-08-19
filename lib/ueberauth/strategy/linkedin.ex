@@ -175,7 +175,7 @@ defmodule Ueberauth.Strategy.LinkedIn do
                       element["primary"] == true && element["type"] == "EMAIL"
                     end)
 
-    if email = email_element["handle~"]["emailAddress"], do: email, else: nil
+    if email = email_element |> get_in(["handle~", "emailAddress"]), do: email, else: nil
   end
 
   defp option(conn, key) do
