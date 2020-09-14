@@ -160,14 +160,16 @@ defmodule Ueberauth.Strategy.LinkedIn do
     end
   end
 
-  defp info_image(user) do
-    user
-    |> get_in(["profilePicture", "displayImage~", "elements"])
+  defp info_image(%{"profilePicture" => profilePicture} = _user) do
+    profilePicture
+    |> get_in(["displayImage~", "elements"])
     |> List.last()
     |> get_in(["identifiers"])
     |> List.last()
     |> get_in(["identifier"])
   end
+
+  defp info_image(_user), do: nil
 
   defp email_from_primary_contact(primary_contact) do
     email_element = primary_contact["elements"]
